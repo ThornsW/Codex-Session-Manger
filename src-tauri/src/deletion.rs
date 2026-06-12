@@ -345,20 +345,21 @@ pub fn path_outside_root_error(path: PathBuf) -> AppError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_fs::prelude::*;
+    use crate::test_fixtures::{create_codex_home_fixture, SESSION_ONE_ID};
 
     #[test]
     fn builds_plan_for_fixture_session() {
-        let root = fixture_root();
+        let fixture = create_codex_home_fixture();
+        let root = fixture.path().to_path_buf();
 
         let plan = build_deletion_plan(
             &root,
             &[root.clone()],
-            &["11111111-1111-4111-8111-111111111111".to_string()],
+            &[SESSION_ONE_ID.to_string()],
         )
         .unwrap();
 
-        assert_eq!(plan.session_ids, vec!["11111111-1111-4111-8111-111111111111"]);
+        assert_eq!(plan.session_ids, vec![SESSION_ONE_ID.to_string()]);
         assert!(plan
             .items
             .iter()
@@ -372,7 +373,8 @@ mod tests {
 
     #[test]
     fn reports_missing_session_as_skipped() {
-        let root = fixture_root();
+        let fixture = create_codex_home_fixture();
+        let root = fixture.path().to_path_buf();
 
         let plan = build_deletion_plan(&root, &[root.clone()], &["missing".to_string()]).unwrap();
 
@@ -382,10 +384,9 @@ mod tests {
 
     #[test]
     fn executes_deletion_inside_temp_fixture_copy() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(fixture_root(), &["**/*"]).unwrap();
-        let root = temp.path().to_path_buf();
-        let session_id = "11111111-1111-4111-8111-111111111111".to_string();
+        let fixture = create_codex_home_fixture();
+        let root = fixture.path().to_path_buf();
+        let session_id = SESSION_ONE_ID.to_string();
         let plan = build_deletion_plan(&root, &[root.clone()], &[session_id.clone()]).unwrap();
 
         let result = execute_deletion_plan(&root, &[root.clone()], plan).unwrap();
@@ -405,10 +406,9 @@ mod tests {
 
     #[test]
     fn rewrites_existing_index_file_without_leaving_temp_file() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(fixture_root(), &["**/*"]).unwrap();
-        let root = temp.path().to_path_buf();
-        let session_id = "11111111-1111-4111-8111-111111111111".to_string();
+        let fixture = create_codex_home_fixture();
+        let root = fixture.path().to_path_buf();
+        let session_id = SESSION_ONE_ID.to_string();
         let plan = build_deletion_plan(&root, &[root.clone()], &[session_id.clone()]).unwrap();
         let planned_records = planned_index_records(&plan);
         let mut skipped = Vec::new();
@@ -432,10 +432,9 @@ mod tests {
     #[test]
     fn rejects_index_and_audit_paths_outside_known_roots() {
         let safe_root = assert_fs::TempDir::new().unwrap();
-        let unsafe_root = assert_fs::TempDir::new().unwrap();
-        unsafe_root.copy_from(fixture_root(), &["**/*"]).unwrap();
-        let codex_home = unsafe_root.path().to_path_buf();
-        let session_id = "11111111-1111-4111-8111-111111111111".to_string();
+        let unsafe_fixture = create_codex_home_fixture();
+        let codex_home = unsafe_fixture.path().to_path_buf();
+        let session_id = SESSION_ONE_ID.to_string();
         let plan = build_deletion_plan(&codex_home, &[codex_home.clone()], &[session_id]).unwrap();
 
         let err = execute_deletion_plan(&codex_home, &[safe_root.path().to_path_buf()], plan)
@@ -448,10 +447,9 @@ mod tests {
 
     #[test]
     fn missing_index_is_skipped_not_reported_deleted() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(fixture_root(), &["**/*"]).unwrap();
-        let root = temp.path().to_path_buf();
-        let session_id = "11111111-1111-4111-8111-111111111111".to_string();
+        let fixture = create_codex_home_fixture();
+        let root = fixture.path().to_path_buf();
+        let session_id = SESSION_ONE_ID.to_string();
         let mut plan = build_deletion_plan(&root, &[root.clone()], &[session_id.clone()]).unwrap();
         std::fs::remove_file(root.join("session_index.jsonl")).unwrap();
         plan.items.retain(|item| item.kind == DeletionItemKind::IndexRecord);
@@ -472,10 +470,9 @@ mod tests {
 
     #[test]
     fn changed_index_row_with_same_id_is_preserved_and_skipped() {
-        let temp = assert_fs::TempDir::new().unwrap();
-        temp.copy_from(fixture_root(), &["**/*"]).unwrap();
-        let root = temp.path().to_path_buf();
-        let session_id = "11111111-1111-4111-8111-111111111111".to_string();
+        let fixture = create_codex_home_fixture();
+        let root = fixture.path().to_path_buf();
+        let session_id = SESSION_ONE_ID.to_string();
         let mut plan = build_deletion_plan(&root, &[root.clone()], &[session_id.clone()]).unwrap();
         let changed_row = "{\"id\":\"11111111-1111-4111-8111-111111111111\",\"thread_name\":\"Changed title\",\"updated_at\":\"2026-06-12T01:20:00Z\"}";
         std::fs::write(
@@ -503,9 +500,5 @@ mod tests {
             .skipped
             .iter()
             .any(|item| item.reason.contains("Changed title")));
-    }
-
-    fn fixture_root() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../fixtures/codex-home")
     }
 }

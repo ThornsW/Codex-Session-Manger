@@ -220,16 +220,16 @@ fn trim_summary(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
+    use crate::test_fixtures::{create_codex_home_fixture, SESSION_ONE_ID, SESSION_TWO_ID};
 
     #[test]
     fn scans_fixture_sessions_and_groups_by_project_path() {
-        let root = fixture_root();
+        let fixture = create_codex_home_fixture();
 
-        let result = scan_codex_home(&root).unwrap();
+        let result = scan_codex_home(fixture.path()).unwrap();
 
         assert_eq!(result.sessions.len(), 2);
-        assert_eq!(result.sessions[0].id, "22222222-2222-4222-8222-222222222222");
+        assert_eq!(result.sessions[0].id, SESSION_TWO_ID);
         assert!(result
             .sessions
             .iter()
@@ -242,19 +242,15 @@ mod tests {
 
     #[test]
     fn extracts_summary_from_first_message() {
-        let root = fixture_root();
+        let fixture = create_codex_home_fixture();
 
-        let result = scan_codex_home(&root).unwrap();
+        let result = scan_codex_home(fixture.path()).unwrap();
         let session = result
             .sessions
             .iter()
-            .find(|session| session.id == "11111111-1111-4111-8111-111111111111")
+            .find(|session| session.id == SESSION_ONE_ID)
             .unwrap();
 
         assert_eq!(session.message_summary, "Clean this Codex project history.");
-    }
-
-    fn fixture_root() -> PathBuf {
-        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../fixtures/codex-home")
     }
 }

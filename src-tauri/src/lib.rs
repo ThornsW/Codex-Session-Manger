@@ -7,6 +7,9 @@ mod paths;
 mod process;
 mod scanner;
 
+#[cfg(test)]
+mod test_fixtures;
+
 #[tauri::command]
 fn scan_sessions() -> Result<models::ScanResult, String> {
     let roots = paths::discover_roots_from_env();
