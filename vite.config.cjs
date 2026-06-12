@@ -1,7 +1,7 @@
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+const react = require("@vitejs/plugin-react");
+const { defineConfig } = require("vite");
 
-export default defineConfig({
+module.exports = defineConfig({
   plugins: [react()],
   clearScreen: false,
   server: {
