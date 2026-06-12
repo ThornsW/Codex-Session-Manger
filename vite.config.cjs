@@ -10,6 +10,7 @@ module.exports = defineConfig({
   },
   envPrefix: ["VITE_", "TAURI_"],
   test: {
+    include: ["src/**/*.{test,spec}.?(c|m)[jt]s?(x)"],
     environment: "jsdom",
     setupFiles: []
   }
