@@ -1,0 +1,67 @@
+import type { CodexSession } from "../types";
+import { formatBytes } from "../sessionFilters";
+
+interface Props {
+  sessions: CodexSession[];
+  focusedId: string | null;
+  selectedIds: Set<string>;
+  onToggle: (id: string) => void;
+  onFocus: (session: CodexSession) => void;
+}
+
+export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFocus }: Props) {
+  return (
+    <section className="session-list" aria-label="Sessions">
+      <div className="table-head">
+        <span>Title</span>
+        <span>Updated</span>
+        <span>Size</span>
+      </div>
+      <div className="table-body">
+        {sessions.length === 0 ? (
+          <div className="empty-state compact">No sessions match the current filters.</div>
+        ) : (
+          sessions.map((session) => (
+            <div
+              className={session.id === focusedId ? "session-row focused" : "session-row"}
+              key={session.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => onFocus(session)}
+              onKeyDown={(event) => {
+                if (isInteractiveTarget(event.target)) return;
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  onFocus(session);
+                }
+              }}
+            >
+              <input
+                aria-label={`Select ${session.title}`}
+                type="checkbox"
+                checked={selectedIds.has(session.id)}
+                onChange={() => onToggle(session.id)}
+                onClick={(event) => event.stopPropagation()}
+              />
+              <span className="session-main">
+                <strong>{session.title}</strong>
+                <span>{session.projectPath ?? "Unrecognized project"}</span>
+              </span>
+              <span className="session-updated">{formatUpdatedAt(session.updatedAt)}</span>
+              <span className="session-size">{formatBytes(session.sizeBytes)}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function formatUpdatedAt(updatedAt: string | null): string {
+  if (!updatedAt) return "Unknown";
+  return new Date(updatedAt).toLocaleString();
+}
+
+function isInteractiveTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLElement && Boolean(target.closest("a, button, input, select, textarea"));
+}
