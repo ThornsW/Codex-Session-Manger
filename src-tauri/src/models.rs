@@ -59,6 +59,10 @@ pub struct DeletionItem {
     pub path: Option<String>,
     pub description: String,
     pub size_bytes: u64,
+    #[serde(default)]
+    pub session_id: Option<String>,
+    #[serde(default)]
+    pub evidence: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

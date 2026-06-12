@@ -120,6 +120,34 @@ describe("App", () => {
 
     expect(apiMocks.previewDeleteSessions).toHaveBeenCalledWith(["22222222-2222-4222-8222-222222222222"]);
   });
+
+  it("confirms deletion with the reviewed preview plan", async () => {
+    const plannedItem = {
+      kind: "session_file" as const,
+      path: "reviewed-fixture.jsonl",
+      description: "Reviewed fixture session file",
+      sizeBytes: 4096,
+      evidence: "reviewed-plan-token"
+    };
+    apiMocks.previewDeleteSessions.mockResolvedValueOnce({
+      sessionIds: ["11111111-1111-4111-8111-111111111111"],
+      items: [plannedItem],
+      skipped: [],
+      freedBytes: 4096
+    });
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole("button", { name: /Preview delete session/i }));
+    await screen.findByText("Reviewed fixture session file");
+    fireEvent.click(screen.getByRole("button", { name: /Delete selected sessions/i }));
+
+    expect(apiMocks.deleteSessions).toHaveBeenCalledWith({
+      sessionIds: ["11111111-1111-4111-8111-111111111111"],
+      items: [plannedItem],
+      skipped: [],
+      freedBytes: 4096
+    });
+  });
 });
 
 describe("DeletePreviewDialog", () => {

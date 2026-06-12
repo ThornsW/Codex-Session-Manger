@@ -44,7 +44,7 @@ fn preview_delete_sessions(session_ids: Vec<String>) -> Result<models::DeletionP
 }
 
 #[tauri::command]
-fn delete_sessions(session_ids: Vec<String>) -> Result<models::DeleteResult, String> {
+fn delete_sessions(plan: models::DeletionPlan) -> Result<models::DeleteResult, String> {
     if process::is_codex_running() {
         return Err("Codex appears to be running. Close Codex before deleting sessions.".to_string());
     }
@@ -53,8 +53,6 @@ fn delete_sessions(session_ids: Vec<String>) -> Result<models::DeleteResult, Str
         return Err("No Codex home was discovered under USERPROFILE\\.codex.".to_string());
     };
     let known_roots = vec![root.codex_home.clone()];
-    let plan = deletion::build_deletion_plan(&root.codex_home, &known_roots, &session_ids)
-        .map_err(|err| err.to_string())?;
     deletion::execute_deletion_plan(&root.codex_home, &known_roots, plan)
         .map_err(|err| err.to_string())
 }

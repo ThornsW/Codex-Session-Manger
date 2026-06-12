@@ -9,8 +9,8 @@ export function previewDeleteSessions(sessionIds: string[]): Promise<DeletionPla
   return invoke<DeletionPlan>("preview_delete_sessions", { sessionIds });
 }
 
-export function deleteSessions(sessionIds: string[]): Promise<DeleteResult> {
-  return invoke<DeleteResult>("delete_sessions", { sessionIds });
+export function deleteSessions(plan: DeletionPlan): Promise<DeleteResult> {
+  return invoke<DeleteResult>("delete_sessions", { plan });
 }
 
 export function revealInExplorer(path: string): Promise<void> {

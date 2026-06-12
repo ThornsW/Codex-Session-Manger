@@ -61,6 +61,8 @@ fn add_session_file_items(
                     path: Some(safe_path.display().to_string()),
                     description: format!("Delete session file for {}", session.id),
                     size_bytes: size,
+                    session_id: Some(session.id.clone()),
+                    evidence: None,
                 });
             }
             Err(err) => skipped.push(SkippedDeletionItem {
@@ -83,8 +85,10 @@ fn add_index_items(
         items.push(DeletionItem {
             kind: DeletionItemKind::IndexRecord,
             path: Some(index_path.display().to_string()),
-            description: format!("Remove session_index.jsonl row: {record}"),
+            description: format!("Remove session_index.jsonl row for {}", session.id),
             size_bytes: size,
+            session_id: Some(session.id.clone()),
+            evidence: Some(record.clone()),
         });
     }
 }
@@ -176,8 +180,9 @@ pub fn execute_deletion_plan(
     }
 
     let freed_bytes = deleted_items.iter().map(|item| item.size_bytes).sum();
+    let deleted_session_ids = deleted_session_ids_from_items(&deleted_items);
     let mut result = DeleteResult {
-        deleted_session_ids: plan.session_ids.clone(),
+        deleted_session_ids,
         deleted_items,
         skipped,
         freed_bytes,
@@ -249,9 +254,12 @@ fn rewrite_index_without_sessions(
     let removed_records = removed.iter().cloned().collect::<HashSet<_>>();
     for record in planned_records {
         if !removed_records.contains(record) {
+            let session = index_record_id(record)
+                .map(|id| format!(" for session: {id}"))
+                .unwrap_or_default();
             skipped.push(SkippedDeletionItem {
                 path: Some(index_path.display().to_string()),
-                reason: format!("Planned index row not found during rewrite: {record}"),
+                reason: format!("Planned index row not found during rewrite{session}"),
             });
         }
     }
@@ -293,9 +301,7 @@ fn validate_index_rewrite_paths(codex_home: &Path, known_roots: &[PathBuf]) -> A
 }
 
 fn index_record_from_item(item: &DeletionItem) -> Option<String> {
-    item.description
-        .strip_prefix("Remove session_index.jsonl row: ")
-        .map(str::to_string)
+    item.evidence.clone()
 }
 
 fn planned_index_records(plan: &DeletionPlan) -> Vec<String> {
@@ -310,6 +316,16 @@ fn index_record_id(record: &str) -> Option<String> {
     serde_json::from_str::<serde_json::Value>(record)
         .ok()
         .and_then(|value| value.get("id").and_then(|id| id.as_str()).map(str::to_string))
+}
+
+fn deleted_session_ids_from_items(items: &[DeletionItem]) -> Vec<String> {
+    let mut ids = items
+        .iter()
+        .filter_map(|item| item.session_id.clone())
+        .collect::<Vec<_>>();
+    ids.sort();
+    ids.dedup();
+    ids
 }
 
 pub fn plan_session_ids(plan: &DeletionPlan) -> Vec<String> {
@@ -376,6 +392,9 @@ mod tests {
         let index = std::fs::read_to_string(root.join("session_index.jsonl")).unwrap();
         assert!(!index.contains("11111111-1111-4111-8111-111111111111"));
         assert!(std::path::Path::new(&result.audit_log_path).exists());
+        let audit = std::fs::read_to_string(&result.audit_log_path).unwrap();
+        assert!(!audit.contains("Fixture cleanup work"));
+        assert!(!audit.contains("Remove session_index"));
     }
 
     #[test]
@@ -412,6 +431,7 @@ mod tests {
             .deleted_items
             .iter()
             .any(|item| item.kind == DeletionItemKind::IndexRecord));
+        assert!(result.deleted_session_ids.is_empty());
         assert!(result
             .skipped
             .iter()
@@ -442,10 +462,15 @@ mod tests {
             .deleted_items
             .iter()
             .any(|item| item.kind == DeletionItemKind::IndexRecord));
+        assert!(result.deleted_session_ids.is_empty());
         assert!(result
             .skipped
             .iter()
             .any(|item| item.reason.contains("changed since preview")));
+        assert!(!result
+            .skipped
+            .iter()
+            .any(|item| item.reason.contains("Changed title")));
     }
 
     fn fixture_root() -> PathBuf {

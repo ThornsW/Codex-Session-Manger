@@ -32,6 +32,8 @@ export interface DeletionItem {
   path: string | null;
   description: string;
   sizeBytes: number;
+  sessionId?: string | null;
+  evidence?: string | null;
 }
 
 export interface SkippedDeletionItem {

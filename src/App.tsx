@@ -142,7 +142,7 @@ export default function App() {
     setBusy(true);
     setStatus("Deleting selected sessions...");
     try {
-      const result = await deleteSessions(deletePlan.sessionIds);
+      const result = await deleteSessions(deletePlan);
       setDeletePlan(null);
       setSelectedIds(new Set());
       setFocused(null);

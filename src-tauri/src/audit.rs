@@ -1,5 +1,5 @@
 use crate::errors::{io_error, AppResult};
-use crate::models::DeleteResult;
+use crate::models::{DeleteResult, DeletionItem, SkippedDeletionItem};
 use crate::paths::{ensure_existing_or_parent_inside_roots, ensure_inside_roots};
 use serde_json::json;
 use std::fs::{self, OpenOptions};
@@ -36,8 +36,8 @@ pub fn append_audit_log(
     let row = json!({
         "timestamp": timestamp,
         "deletedSessionIds": &result.deleted_session_ids,
-        "deletedItems": &result.deleted_items,
-        "skipped": &result.skipped,
+        "deletedItems": sanitize_deleted_items(&result.deleted_items),
+        "skipped": sanitize_skipped_items(&result.skipped),
         "freedBytes": result.freed_bytes,
     });
     let mut file = OpenOptions::new()
@@ -47,4 +47,30 @@ pub fn append_audit_log(
         .map_err(|source| io_error(log_path.clone(), source))?;
     writeln!(file, "{row}").map_err(|source| io_error(log_path.clone(), source))?;
     Ok(log_path)
+}
+
+fn sanitize_deleted_items(items: &[DeletionItem]) -> Vec<serde_json::Value> {
+    items
+        .iter()
+        .map(|item| {
+            json!({
+                "kind": item.kind,
+                "path": &item.path,
+                "sessionId": &item.session_id,
+                "sizeBytes": item.size_bytes,
+            })
+        })
+        .collect()
+}
+
+fn sanitize_skipped_items(items: &[SkippedDeletionItem]) -> Vec<serde_json::Value> {
+    items
+        .iter()
+        .map(|item| {
+            json!({
+                "path": &item.path,
+                "reason": &item.reason,
+            })
+        })
+        .collect()
 }
