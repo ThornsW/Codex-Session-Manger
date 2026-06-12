@@ -1,0 +1,58 @@
+:root {
+  font-family: Inter, Segoe UI, system-ui, sans-serif;
+  color: #1d2430;
+  background: #f5f7fa;
+}
+
+body {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid #d8dee8;
+  background: #ffffff;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.topbar p {
+  margin: 4px 0 0;
+  color: #5e6a7d;
+  font-size: 13px;
+}
+
+.icon-button {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #c7d0de;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #253041;
+  cursor: pointer;
+}
+
+.empty-state {
+  padding: 40px 24px;
+  color: #5e6a7d;
+}
