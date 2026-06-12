@@ -279,14 +279,20 @@ fn rewrite_index_without_sessions(
         },
     )
     .map_err(|source| io_error(temp_path.clone(), source))?;
-    fs::rename(&temp_path, &index_path).map_err(|source| {
+    replace_file_contents(&temp_path, &index_path).map_err(|source| {
         skipped.push(SkippedDeletionItem {
             path: Some(index_path.display().to_string()),
             reason: source.to_string(),
         });
-        io_error(index_path.clone(), source)
+        source
     })?;
     Ok(removed)
+}
+
+fn replace_file_contents(temp_path: &Path, target_path: &Path) -> AppResult<()> {
+    fs::copy(temp_path, target_path).map_err(|source| io_error(target_path.to_path_buf(), source))?;
+    fs::remove_file(temp_path).map_err(|source| io_error(temp_path.to_path_buf(), source))?;
+    Ok(())
 }
 
 fn validate_index_rewrite_paths(codex_home: &Path, known_roots: &[PathBuf]) -> AppResult<()> {
@@ -395,6 +401,32 @@ mod tests {
         let audit = std::fs::read_to_string(&result.audit_log_path).unwrap();
         assert!(!audit.contains("Fixture cleanup work"));
         assert!(!audit.contains("Remove session_index"));
+    }
+
+    #[test]
+    fn rewrites_existing_index_file_without_leaving_temp_file() {
+        let temp = assert_fs::TempDir::new().unwrap();
+        temp.copy_from(fixture_root(), &["**/*"]).unwrap();
+        let root = temp.path().to_path_buf();
+        let session_id = "11111111-1111-4111-8111-111111111111".to_string();
+        let plan = build_deletion_plan(&root, &[root.clone()], &[session_id.clone()]).unwrap();
+        let planned_records = planned_index_records(&plan);
+        let mut skipped = Vec::new();
+
+        let removed = rewrite_index_without_sessions(
+            &root,
+            &[root.clone()],
+            &[session_id.clone()],
+            &planned_records,
+            &mut skipped,
+        )
+        .unwrap();
+
+        let index = std::fs::read_to_string(root.join("session_index.jsonl")).unwrap();
+        assert_eq!(removed.len(), 1);
+        assert!(!index.contains(&session_id));
+        assert!(!root.join("session_index.jsonl.tmp").exists());
+        assert!(skipped.is_empty());
     }
 
     #[test]
