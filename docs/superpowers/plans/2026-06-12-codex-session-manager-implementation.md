@@ -32,7 +32,7 @@ Create or modify these files:
 - `index.html`: Vite entry HTML.
 - `tsconfig.json`: TypeScript compiler config.
 - `tsconfig.node.json`: TypeScript config for Vite.
-- `vite.config.ts`: Vite, React, and Vitest setup.
+- `vite.config.cjs`: Vite, React, and Vitest setup using CommonJS to avoid Windows sandbox temp config writes.
 - `src/main.tsx`: React bootstrap.
 - `src/App.tsx`: top-level app state and three-column layout.
 - `src/api.ts`: typed wrappers around Tauri `invoke`.
@@ -74,7 +74,7 @@ Create or modify these files:
 - Create: `index.html`
 - Create: `tsconfig.json`
 - Create: `tsconfig.node.json`
-- Create: `vite.config.ts`
+- Create: `vite.config.cjs`
 - Create: `src/main.tsx`
 - Create: `src/App.tsx`
 - Create: `src/api.ts`
@@ -207,17 +207,17 @@ Write `tsconfig.node.json`:
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.cjs"]
 }
 ```
 
-Write `vite.config.ts`:
+Write `vite.config.cjs`:
 
-```ts
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+```js
+const react = require("@vitejs/plugin-react");
+const { defineConfig } = require("vite");
 
-export default defineConfig({
+module.exports = defineConfig({
   plugins: [react()],
   clearScreen: false,
   server: {
@@ -598,7 +598,7 @@ If local Rust is absent, do not run Tauri locally in this task. The Windows buil
 Run:
 
 ```powershell
-git add .gitignore README.md package.json package-lock.json index.html tsconfig.json tsconfig.node.json vite.config.ts src src-tauri
+git add .gitignore README.md package.json package-lock.json index.html tsconfig.json tsconfig.node.json vite.config.cjs src src-tauri
 git commit -m "feat: scaffold Tauri session manager"
 ```
 
