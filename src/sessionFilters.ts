@@ -43,23 +43,23 @@ export function sortSessions(sessions: CodexSession[], sortMode: SortMode): Code
 export function groupSessions(sessions: CodexSession[]): SessionGroup[] {
   const groups = new Map<GroupKey, SessionGroup>();
 
-  addGroup(groups, "all", "All sessions", sessions);
+  addGroup(groups, "all", "全部会话", sessions);
   addGroup(
     groups,
     "archived",
-    "Archived",
+    "已归档",
     sessions.filter((session) => session.archived)
   );
   addGroup(
     groups,
     "unrecognized",
-    "Unrecognized project",
+    "未识别项目",
     sessions.filter((session) => !session.projectPath)
   );
   addGroup(
     groups,
     "abnormal",
-    "Orphaned or abnormal",
+    "孤立或异常",
     sessions.filter((session) => session.status === "orphaned" || session.status === "abnormal")
   );
 

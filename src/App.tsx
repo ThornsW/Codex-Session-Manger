@@ -16,11 +16,11 @@ import {
 import type { CodexSession, DeletionPlan, ScanResult } from "./types";
 
 const sortLabels: Record<SortMode, string> = {
-  "updated-desc": "Updated newest",
-  "updated-asc": "Updated oldest",
-  "size-desc": "Size largest",
-  "size-asc": "Size smallest",
-  "title-asc": "Title A-Z"
+  "updated-desc": "最近更新",
+  "updated-asc": "最早更新",
+  "size-desc": "体积从大到小",
+  "size-asc": "体积从小到大",
+  "title-asc": "标题 A-Z"
 };
 
 export default function App() {
@@ -32,11 +32,11 @@ export default function App() {
   const [focused, setFocused] = useState<CodexSession | null>(null);
   const [deletePlan, setDeletePlan] = useState<DeletionPlan | null>(null);
   const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState("Ready to scan");
+  const [status, setStatus] = useState("准备扫描");
 
   const refresh = useCallback(async () => {
     setBusy(true);
-    setStatus("Scanning sessions...");
+    setStatus("正在扫描会话...");
     try {
       const result = await scanSessions();
       setScan(result);
@@ -44,9 +44,9 @@ export default function App() {
         if (!current) return result.sessions[0] ?? null;
         return result.sessions.find((session) => session.id === current.id) ?? result.sessions[0] ?? null;
       });
-      setStatus(`Scanned ${result.sessions.length} sessions`);
+      setStatus(`扫描到 ${result.sessions.length} 个会话`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to scan sessions");
+      setStatus(error instanceof Error ? error.message : "扫描会话失败");
     } finally {
       setBusy(false);
     }
@@ -124,13 +124,13 @@ export default function App() {
     if (ids.length === 0) return;
 
     setBusy(true);
-    setStatus("Building deletion preview...");
+    setStatus("正在生成删除预览...");
     try {
       const plan = await previewDeleteSessions(ids);
       setDeletePlan(plan);
-      setStatus(`Preview ready for ${plan.sessionIds.length} sessions`);
+      setStatus(`已生成 ${plan.sessionIds.length} 个会话的删除预览`);
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to preview deletion");
+      setStatus(error instanceof Error ? error.message : "生成删除预览失败");
     } finally {
       setBusy(false);
     }
@@ -140,16 +140,16 @@ export default function App() {
     if (!deletePlan) return;
 
     setBusy(true);
-    setStatus("Deleting selected sessions...");
+    setStatus("正在删除选中的会话...");
     try {
       const result = await deleteSessions(deletePlan);
       setDeletePlan(null);
       setSelectedIds(new Set());
       setFocused(null);
-      setStatus(`Deleted ${result.deletedSessionIds.length} sessions, freed ${result.freedBytes} bytes`);
+      setStatus(`已删除 ${result.deletedSessionIds.length} 个会话，释放 ${result.freedBytes} 字节`);
       await refresh();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to delete selected sessions");
+      setStatus(error instanceof Error ? error.message : "删除选中的会话失败");
     } finally {
       setBusy(false);
     }
@@ -157,12 +157,12 @@ export default function App() {
 
   async function revealPath(path: string) {
     setBusy(true);
-    setStatus("Opening path in Explorer...");
+    setStatus("正在资源管理器中打开路径...");
     try {
       await revealInExplorer(path);
-      setStatus("Path opened in Explorer");
+      setStatus("路径已在资源管理器中打开");
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to reveal path");
+      setStatus(error instanceof Error ? error.message : "打开路径失败");
     } finally {
       setBusy(false);
     }
@@ -172,10 +172,10 @@ export default function App() {
     <main className="app-shell">
       <header className="topbar">
         <div className="brand-block">
-          <h1>Codex Session Manager</h1>
+          <h1>Codex 会话管理器</h1>
           <p>{status}</p>
         </div>
-        <button type="button" className="icon-button" aria-label="Rescan sessions" onClick={refresh} disabled={busy}>
+        <button type="button" className="icon-button" aria-label="重新扫描会话" onClick={refresh} disabled={busy}>
           <RefreshCw size={18} aria-hidden="true" />
         </button>
       </header>
@@ -185,13 +185,13 @@ export default function App() {
           <Search size={16} aria-hidden="true" />
           <input
             type="search"
-            placeholder="Search id, title, project, summary, status"
+            placeholder="搜索 ID、标题、项目、摘要、状态"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />
         </label>
         <label className="sort-field">
-          <span>Sort</span>
+          <span>排序</span>
           <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}>
             {Object.entries(sortLabels).map(([value, label]) => (
               <option key={value} value={value}>
@@ -200,7 +200,7 @@ export default function App() {
             ))}
           </select>
         </label>
-        <span className="selection-count">{selectedSessions.length} selected</span>
+        <span className="selection-count">{selectedSessions.length} 个已选择</span>
       </div>
 
       <div className="workspace-grid">

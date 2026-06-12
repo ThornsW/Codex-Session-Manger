@@ -11,15 +11,15 @@ interface Props {
 
 export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFocus }: Props) {
   return (
-    <section className="session-list" aria-label="Sessions">
+    <section className="session-list" aria-label="会话列表">
       <div className="table-head">
-        <span>Title</span>
-        <span>Updated</span>
-        <span>Size</span>
+        <span>标题</span>
+        <span>更新时间</span>
+        <span>大小</span>
       </div>
       <div className="table-body">
         {sessions.length === 0 ? (
-          <div className="empty-state compact">No sessions match the current filters.</div>
+          <div className="empty-state compact">没有符合当前筛选条件的会话。</div>
         ) : (
           sessions.map((session) => (
             <div
@@ -37,7 +37,7 @@ export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFoc
               }}
             >
               <input
-                aria-label={`Select ${session.title}`}
+                aria-label={`选择 ${session.title}`}
                 type="checkbox"
                 checked={selectedIds.has(session.id)}
                 onChange={() => onToggle(session.id)}
@@ -45,7 +45,7 @@ export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFoc
               />
               <span className="session-main">
                 <strong>{session.title}</strong>
-                <span>{session.projectPath ?? "Unrecognized project"}</span>
+                <span>{session.projectPath ?? "未识别项目"}</span>
               </span>
               <span className="session-updated">{formatUpdatedAt(session.updatedAt)}</span>
               <span className="session-size">{formatBytes(session.sizeBytes)}</span>
@@ -58,7 +58,7 @@ export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFoc
 }
 
 function formatUpdatedAt(updatedAt: string | null): string {
-  if (!updatedAt) return "Unknown";
+  if (!updatedAt) return "未知";
   return new Date(updatedAt).toLocaleString();
 }
 

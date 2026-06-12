@@ -89,6 +89,12 @@ describe("App", () => {
 
     expect((await screen.findAllByText("Fixture cleanup work")).length).toBeGreaterThan(0);
     expect(screen.getAllByText("D:\\Library\\FixtureProject").length).toBeGreaterThan(0);
+    expect(screen.getByText("Codex 会话管理器")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("搜索 ID、标题、项目、摘要、状态")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "重新扫描会话" })).toBeInTheDocument();
+    expect(screen.getByText("全部会话")).toBeInTheDocument();
+    expect(screen.getByText("排序")).toBeInTheDocument();
+    expect(screen.getByText("0 个已选择")).toBeInTheDocument();
   });
 
   it("moves focus to the visible search result before previewing deletion", async () => {
@@ -96,15 +102,15 @@ describe("App", () => {
 
     expect(await screen.findByText("Archive review")).toBeInTheDocument();
 
-    fireEvent.change(screen.getByPlaceholderText("Search id, title, project, summary, status"), {
+    fireEvent.change(screen.getByPlaceholderText("搜索 ID、标题、项目、摘要、状态"), {
       target: { value: "Archive" }
     });
 
-    const details = screen.getByLabelText("Session details");
+    const details = screen.getByLabelText("会话详情");
     expect(within(details).getByText("Archive review")).toBeInTheDocument();
     expect(within(details).queryByText("Fixture cleanup work")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /Preview delete session/i }));
+    fireEvent.click(screen.getByRole("button", { name: /预览删除/ }));
 
     expect(apiMocks.previewDeleteSessions).toHaveBeenCalledWith(["22222222-2222-4222-8222-222222222222"]);
   });
@@ -112,11 +118,11 @@ describe("App", () => {
   it("does not preview hidden selected sessions after filtering", async () => {
     render(<App />);
 
-    fireEvent.click(await screen.findByLabelText("Select Fixture cleanup work"));
-    fireEvent.change(screen.getByPlaceholderText("Search id, title, project, summary, status"), {
+    fireEvent.click(await screen.findByLabelText("选择 Fixture cleanup work"));
+    fireEvent.change(screen.getByPlaceholderText("搜索 ID、标题、项目、摘要、状态"), {
       target: { value: "Archive" }
     });
-    fireEvent.click(screen.getByRole("button", { name: /Preview delete session/i }));
+    fireEvent.click(screen.getByRole("button", { name: /预览删除/ }));
 
     expect(apiMocks.previewDeleteSessions).toHaveBeenCalledWith(["22222222-2222-4222-8222-222222222222"]);
   });
@@ -137,9 +143,9 @@ describe("App", () => {
     });
     render(<App />);
 
-    fireEvent.click(await screen.findByRole("button", { name: /Preview delete session/i }));
+    fireEvent.click(await screen.findByRole("button", { name: /预览删除/ }));
     await screen.findByText("Reviewed fixture session file");
-    fireEvent.click(screen.getByRole("button", { name: /Delete selected sessions/i }));
+    fireEvent.click(screen.getByRole("button", { name: /删除选中的会话/ }));
 
     expect(apiMocks.deleteSessions).toHaveBeenCalledWith({
       sessionIds: ["11111111-1111-4111-8111-111111111111"],
@@ -171,7 +177,7 @@ describe("DeletePreviewDialog", () => {
       />
     );
 
-    const confirmButton = screen.getByRole("button", { name: /Delete selected sessions/i });
+    const confirmButton = screen.getByRole("button", { name: /删除选中的会话/ });
     expect(confirmButton).toBeDisabled();
     fireEvent.click(confirmButton);
     expect(onConfirm).not.toHaveBeenCalled();
@@ -197,7 +203,7 @@ describe("DeletePreviewDialog", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: /Delete selected sessions/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /删除选中的会话/ })).toBeDisabled();
 
     rerender(
       <DeletePreviewDialog
@@ -220,6 +226,6 @@ describe("DeletePreviewDialog", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: /Delete selected sessions/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /删除选中的会话/ })).toBeDisabled();
   });
 });

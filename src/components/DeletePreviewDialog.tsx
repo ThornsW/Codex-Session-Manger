@@ -19,23 +19,23 @@ export function DeletePreviewDialog({ plan, busy, onConfirm, onCancel }: Props) 
       <section className="dialog" role="dialog" aria-modal="true" aria-labelledby="delete-preview-title">
         <div className="dialog-header">
           <div>
-            <p className="eyebrow">Deletion preview</p>
-            <h2 id="delete-preview-title">Review {plan.items.length} planned items</h2>
+            <p className="eyebrow">删除预览</p>
+            <h2 id="delete-preview-title">查看 {plan.items.length} 个计划项</h2>
           </div>
-          <button type="button" className="icon-button" onClick={onCancel} aria-label="Close delete preview" disabled={busy}>
+          <button type="button" className="icon-button" onClick={onCancel} aria-label="关闭删除预览" disabled={busy}>
             <X size={18} aria-hidden="true" />
           </button>
         </div>
 
         <div className="dialog-summary">
-          <span>{plan.sessionIds.length} sessions</span>
-          <span>{formatBytes(plan.freedBytes)} estimated freed</span>
-          <span>{plan.skipped.length} skipped</span>
+          <span>{plan.sessionIds.length} 个会话</span>
+          <span>预计释放 {formatBytes(plan.freedBytes)}</span>
+          <span>{plan.skipped.length} 个已跳过</span>
         </div>
 
         <div className="dialog-list">
           {plan.items.length === 0 ? (
-            <p className="muted">No deletable items were found for this preview.</p>
+            <p className="muted">没有找到可删除项。</p>
           ) : (
             <ul className="path-list">
               {plan.items.map((item, index) => (
@@ -43,9 +43,9 @@ export function DeletePreviewDialog({ plan, busy, onConfirm, onCancel }: Props) 
                   <span>
                     <strong>{item.description}</strong>
                     <small>
-                      {item.kind} / {formatBytes(item.sizeBytes)}
+                      {deletionKindLabel(item.kind)} / {formatBytes(item.sizeBytes)}
                     </small>
-                    <span>{item.path ?? "No concrete path"}</span>
+                    <span>{item.path ?? "无明确路径"}</span>
                   </span>
                 </li>
               ))}
@@ -55,13 +55,13 @@ export function DeletePreviewDialog({ plan, busy, onConfirm, onCancel }: Props) 
 
         {plan.skipped.length > 0 ? (
           <div className="dialog-list skipped">
-            <h3>Skipped</h3>
+            <h3>已跳过</h3>
             <ul className="path-list">
               {plan.skipped.map((item, index) => (
                 <li key={`${item.path ?? "unknown"}-${index}`}>
                   <span>
                     <strong>{item.reason}</strong>
-                    <span>{item.path ?? "No concrete path"}</span>
+                    <span>{item.path ?? "无明确路径"}</span>
                   </span>
                 </li>
               ))}
@@ -71,11 +71,11 @@ export function DeletePreviewDialog({ plan, busy, onConfirm, onCancel }: Props) 
 
         <div className="dialog-actions">
           <button type="button" className="secondary-button" onClick={onCancel} disabled={busy}>
-            Cancel
+            取消
           </button>
           <button type="button" className="danger-button" onClick={onConfirm} disabled={!canConfirm}>
             <Trash2 size={16} aria-hidden="true" />
-            Delete selected sessions
+            删除选中的会话
           </button>
         </div>
       </section>
@@ -85,4 +85,11 @@ export function DeletePreviewDialog({ plan, busy, onConfirm, onCancel }: Props) 
 
 function hasConcretePath(item: DeletionPlan["items"][number]): boolean {
   return typeof item.path === "string" && item.path.trim().length > 0;
+}
+
+function deletionKindLabel(kind: DeletionPlan["items"][number]["kind"]): string {
+  if (kind === "session_file") return "会话文件";
+  if (kind === "index_record") return "索引记录";
+  if (kind === "cache_file") return "缓存文件";
+  return "空目录";
 }

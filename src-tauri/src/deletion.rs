@@ -25,7 +25,7 @@ pub fn build_deletion_plan(
         let Some(session) = scan.sessions.iter().find(|session| &session.id == session_id) else {
             skipped.push(SkippedDeletionItem {
                 path: None,
-                reason: format!("Session not found: {session_id}"),
+                reason: format!("未找到会话：{session_id}"),
             });
             continue;
         };
@@ -59,7 +59,7 @@ fn add_session_file_items(
                 items.push(DeletionItem {
                     kind: DeletionItemKind::SessionFile,
                     path: Some(safe_path.display().to_string()),
-                    description: format!("Delete session file for {}", session.id),
+                    description: format!("删除会话文件：{}", session.id),
                     size_bytes: size,
                     session_id: Some(session.id.clone()),
                     evidence: None,
@@ -85,7 +85,7 @@ fn add_index_items(
         items.push(DeletionItem {
             kind: DeletionItemKind::IndexRecord,
             path: Some(index_path.display().to_string()),
-            description: format!("Remove session_index.jsonl row for {}", session.id),
+            description: format!("移除 session_index.jsonl 索引行：{}", session.id),
             size_bytes: size,
             session_id: Some(session.id.clone()),
             evidence: Some(record.clone()),
@@ -206,7 +206,7 @@ fn rewrite_index_without_sessions(
     if !index_path.exists() {
         skipped.push(SkippedDeletionItem {
             path: Some(index_path.display().to_string()),
-            reason: "Index file not found; no rows removed".to_string(),
+            reason: "未找到索引文件；没有移除任何记录".to_string(),
         });
         return Ok(vec![]);
     }
@@ -244,7 +244,7 @@ fn rewrite_index_without_sessions(
             if planned_by_id.contains_key(&id) && changed_session_ids.insert(id.clone()) {
                 skipped.push(SkippedDeletionItem {
                     path: Some(index_path.display().to_string()),
-                    reason: format!("Index row changed since preview for session: {id}"),
+                    reason: format!("预览后索引行已发生变化，会话：{id}"),
                 });
             }
         }
@@ -255,11 +255,11 @@ fn rewrite_index_without_sessions(
     for record in planned_records {
         if !removed_records.contains(record) {
             let session = index_record_id(record)
-                .map(|id| format!(" for session: {id}"))
+                .map(|id| format!("，会话：{id}"))
                 .unwrap_or_default();
             skipped.push(SkippedDeletionItem {
                 path: Some(index_path.display().to_string()),
-                reason: format!("Planned index row not found during rewrite{session}"),
+                reason: format!("重写索引时未找到预览中的索引行{session}"),
             });
         }
     }
@@ -377,7 +377,7 @@ mod tests {
         let plan = build_deletion_plan(&root, &[root.clone()], &["missing".to_string()]).unwrap();
 
         assert_eq!(plan.items.len(), 0);
-        assert_eq!(plan.skipped[0].reason, "Session not found: missing");
+        assert_eq!(plan.skipped[0].reason, "未找到会话：missing");
     }
 
     #[test]
@@ -400,7 +400,7 @@ mod tests {
         assert!(std::path::Path::new(&result.audit_log_path).exists());
         let audit = std::fs::read_to_string(&result.audit_log_path).unwrap();
         assert!(!audit.contains("Fixture cleanup work"));
-        assert!(!audit.contains("Remove session_index"));
+        assert!(!audit.contains("移除 session_index"));
     }
 
     #[test]
@@ -467,7 +467,7 @@ mod tests {
         assert!(result
             .skipped
             .iter()
-            .any(|item| item.reason.contains("Index file not found")));
+            .any(|item| item.reason.contains("未找到索引文件")));
     }
 
     #[test]
@@ -498,7 +498,7 @@ mod tests {
         assert!(result
             .skipped
             .iter()
-            .any(|item| item.reason.contains("changed since preview")));
+            .any(|item| item.reason.contains("预览后索引行已发生变化")));
         assert!(!result
             .skipped
             .iter()

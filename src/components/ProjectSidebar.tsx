@@ -10,8 +10,8 @@ interface Props {
 
 export function ProjectSidebar({ groups, selectedGroup, onSelectGroup }: Props) {
   return (
-    <aside className="sidebar" aria-label="Project groups">
-      <div className="panel-title">Projects</div>
+    <aside className="sidebar" aria-label="项目分组">
+      <div className="panel-title">项目</div>
       <div className="group-list">
         {groups.map((group) => (
           <button

@@ -1,6 +1,6 @@
 import { ExternalLink, Trash2 } from "lucide-react";
 import { formatBytes } from "../sessionFilters";
-import type { CodexSession } from "../types";
+import type { CodexSession, SessionStatus } from "../types";
 
 interface Props {
   session: CodexSession | null;
@@ -13,9 +13,9 @@ interface Props {
 export function SessionDetails({ session, selectedCount, busy, onPreviewDelete, onRevealPath }: Props) {
   if (!session) {
     return (
-      <aside className="details-pane" aria-label="Session details">
-        <div className="panel-title">Details</div>
-        <div className="empty-state compact">Select a session to inspect paths and cleanup impact.</div>
+      <aside className="details-pane" aria-label="会话详情">
+        <div className="panel-title">详情</div>
+        <div className="empty-state compact">选择一个会话以查看路径和清理影响。</div>
       </aside>
     );
   }
@@ -27,46 +27,46 @@ export function SessionDetails({ session, selectedCount, busy, onPreviewDelete, 
   ];
 
   return (
-    <aside className="details-pane" aria-label="Session details">
+    <aside className="details-pane" aria-label="会话详情">
       <div className="details-header">
         <div>
-          <div className="panel-title">Details</div>
+          <div className="panel-title">详情</div>
           <h2>{session.title}</h2>
         </div>
-        <span className={`status-pill ${session.status}`}>{session.status}</span>
+        <span className={`status-pill ${session.status}`}>{statusLabel(session.status)}</span>
       </div>
 
       <dl className="detail-grid">
         <div>
-          <dt>Session ID</dt>
+          <dt>会话 ID</dt>
           <dd>{session.id}</dd>
         </div>
         <div>
-          <dt>Project</dt>
-          <dd>{session.projectPath ?? "Unrecognized project"}</dd>
+          <dt>项目</dt>
+          <dd>{session.projectPath ?? "未识别项目"}</dd>
         </div>
         <div>
-          <dt>Updated</dt>
-          <dd>{session.updatedAt ? new Date(session.updatedAt).toLocaleString() : "Unknown"}</dd>
+          <dt>更新时间</dt>
+          <dd>{session.updatedAt ? new Date(session.updatedAt).toLocaleString() : "未知"}</dd>
         </div>
         <div>
-          <dt>Estimated size</dt>
+          <dt>预估大小</dt>
           <dd>{formatBytes(session.sizeBytes)}</dd>
         </div>
       </dl>
 
       <section className="detail-section">
-        <h3>Summary</h3>
-        <p>{session.messageSummary || "No summary available."}</p>
+        <h3>摘要</h3>
+        <p>{session.messageSummary || "暂无摘要。"}</p>
       </section>
 
-      <PathList title="Session files" paths={session.sessionFilePaths} onRevealPath={onRevealPath} />
-      <PathList title="Derived cache" paths={session.derivedCachePaths} onRevealPath={onRevealPath} />
+      <PathList title="会话文件" paths={session.sessionFilePaths} onRevealPath={onRevealPath} />
+      <PathList title="派生缓存" paths={session.derivedCachePaths} onRevealPath={onRevealPath} />
 
       <section className="detail-section">
-        <h3>Index records</h3>
+        <h3>索引记录</h3>
         {session.indexRecords.length === 0 ? (
-          <p className="muted">No index records reported.</p>
+          <p className="muted">没有索引记录。</p>
         ) : (
           <ul className="path-list">
             {session.indexRecords.map((record, index) => (
@@ -78,7 +78,7 @@ export function SessionDetails({ session, selectedCount, busy, onPreviewDelete, 
 
       {session.warnings.length > 0 ? (
         <section className="detail-section">
-          <h3>Warnings</h3>
+          <h3>警告</h3>
           <ul className="path-list warning-list">
             {session.warnings.map((warning) => (
               <li key={warning}>{warning}</li>
@@ -90,12 +90,12 @@ export function SessionDetails({ session, selectedCount, busy, onPreviewDelete, 
       <div className="details-actions">
         <button type="button" className="danger-button" onClick={onPreviewDelete} disabled={busy || selectedCount === 0}>
           <Trash2 size={16} aria-hidden="true" />
-          Preview delete {selectedCount > 1 ? `${selectedCount} sessions` : "session"}
+          预览删除{selectedCount > 1 ? ` ${selectedCount} 个会话` : "当前会话"}
         </button>
         {revealPaths[0] ? (
           <button type="button" className="secondary-button" onClick={() => onRevealPath(revealPaths[0])} disabled={busy}>
             <ExternalLink size={16} aria-hidden="true" />
-            Reveal first path
+            打开首个路径
           </button>
         ) : null}
       </div>
@@ -114,13 +114,13 @@ function PathList({ title, paths, onRevealPath }: PathListProps) {
     <section className="detail-section">
       <h3>{title}</h3>
       {paths.length === 0 ? (
-        <p className="muted">None reported.</p>
+        <p className="muted">无记录。</p>
       ) : (
         <ul className="path-list">
           {paths.map((path) => (
             <li key={path}>
               <span>{path}</span>
-              <button type="button" className="path-action" onClick={() => onRevealPath(path)} aria-label={`Reveal ${path}`}>
+              <button type="button" className="path-action" onClick={() => onRevealPath(path)} aria-label={`打开 ${path}`}>
                 <ExternalLink size={14} aria-hidden="true" />
               </button>
             </li>
@@ -129,4 +129,11 @@ function PathList({ title, paths, onRevealPath }: PathListProps) {
       )}
     </section>
   );
+}
+
+function statusLabel(status: SessionStatus): string {
+  if (status === "active") return "活动";
+  if (status === "archived") return "已归档";
+  if (status === "orphaned") return "孤立";
+  return "异常";
 }

@@ -62,7 +62,7 @@ fn read_index(codex_home: &Path, warnings: &mut Vec<String>) -> AppResult<HashMa
                     let title = value
                         .get("thread_name")
                         .and_then(Value::as_str)
-                        .unwrap_or("Untitled")
+                        .unwrap_or("未命名")
                         .to_string();
                     let updated_at = value
                         .get("updated_at")
@@ -159,7 +159,7 @@ fn parse_session_file(
     let title = record
         .map(|record| record.title.clone())
         .filter(|title| !title.trim().is_empty())
-        .unwrap_or_else(|| "Untitled session".to_string());
+        .unwrap_or_else(|| "未命名会话".to_string());
 
     if let Some(index_updated_at) = record.and_then(|record| record.updated_at.clone()) {
         updated_at = Some(index_updated_at);
