@@ -13,6 +13,7 @@ import {
   type GroupKey,
   type SortMode
 } from "./sessionFilters";
+import { getSessionInstanceKey } from "./sessionIdentity";
 import type { CodexSession, DeletionPlan, ScanResult } from "./types";
 
 const sortLabels: Record<SortMode, string> = {
@@ -71,14 +72,18 @@ export default function App() {
     return sortSessions(filtered, sortMode);
   }, [allSessions, query, selectedGroup, sortMode]);
   const visibleIds = useMemo(() => new Set(visibleSessions.map((session) => session.id)), [visibleSessions]);
+  const visibleInstanceKeys = useMemo(
+    () => new Set(visibleSessions.map(getSessionInstanceKey)),
+    [visibleSessions]
+  );
 
   useEffect(() => {
     setFocused((current) => {
       if (visibleSessions.length === 0) return null;
-      if (current && visibleIds.has(current.id)) return current;
+      if (current && visibleInstanceKeys.has(getSessionInstanceKey(current))) return current;
       return visibleSessions[0];
     });
-  }, [visibleIds, visibleSessions]);
+  }, [visibleInstanceKeys, visibleSessions]);
 
   useEffect(() => {
     setSelectedIds((current) => {
@@ -92,7 +97,14 @@ export default function App() {
     [selectedIds, visibleSessions]
   );
 
-  const focusedSession = focused && visibleIds.has(focused.id) ? focused : visibleSessions[0] ?? null;
+  const focusedSession =
+    focused && visibleInstanceKeys.has(getSessionInstanceKey(focused)) ? focused : visibleSessions[0] ?? null;
+
+  const selectGroup = useCallback((group: GroupKey) => {
+    setSelectedGroup(group);
+    setSelectedIds(new Set());
+    setFocused(null);
+  }, []);
 
   function toggleSelected(id: string) {
     setSelectedIds((current) => {
@@ -204,10 +216,11 @@ export default function App() {
       </div>
 
       <div className="workspace-grid">
-        <ProjectSidebar groups={groups} selectedGroup={selectedGroup} onSelectGroup={setSelectedGroup} />
+        <ProjectSidebar groups={groups} selectedGroup={selectedGroup} onSelectGroup={selectGroup} />
         <SessionTable
+          key={selectedGroup}
           sessions={visibleSessions}
-          focusedId={focusedSession?.id ?? null}
+          focusedKey={focusedSession ? getSessionInstanceKey(focusedSession) : null}
           selectedIds={selectedIds}
           onToggle={toggleSelected}
           onFocus={focusSession}

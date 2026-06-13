@@ -13,21 +13,25 @@ export function ProjectSidebar({ groups, selectedGroup, onSelectGroup }: Props) 
     <aside className="sidebar" aria-label="项目分组">
       <div className="panel-title">项目</div>
       <div className="group-list">
-        {groups.map((group) => (
-          <button
-            key={group.key}
-            type="button"
-            className={group.key === selectedGroup ? "group-row selected" : "group-row"}
-            onClick={() => onSelectGroup(group.key)}
-            title={group.label}
-          >
-            {iconForGroup(group.key)}
-            <span className="group-label">{group.label}</span>
-            <span className="group-meta">
-              {group.count} / {formatBytes(group.sizeBytes)}
-            </span>
-          </button>
-        ))}
+        {groups.map((group) => {
+          const isSelected = group.key === selectedGroup;
+          return (
+            <button
+              key={group.key}
+              type="button"
+              className={isSelected ? "group-row selected" : "group-row"}
+              aria-current={isSelected ? "page" : undefined}
+              onClick={() => onSelectGroup(group.key)}
+              title={group.label}
+            >
+              {iconForGroup(group.key)}
+              <span className="group-label">{group.label}</span>
+              <span className="group-meta">
+                {group.count} / {formatBytes(group.sizeBytes)}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </aside>
   );

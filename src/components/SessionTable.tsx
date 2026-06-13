@@ -1,15 +1,16 @@
 import type { CodexSession } from "../types";
 import { formatBytes } from "../sessionFilters";
+import { getSessionInstanceKey } from "../sessionIdentity";
 
 interface Props {
   sessions: CodexSession[];
-  focusedId: string | null;
+  focusedKey: string | null;
   selectedIds: Set<string>;
   onToggle: (id: string) => void;
   onFocus: (session: CodexSession) => void;
 }
 
-export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFocus }: Props) {
+export function SessionTable({ sessions, focusedKey, selectedIds, onToggle, onFocus }: Props) {
   return (
     <section className="session-list" aria-label="会话列表">
       <div className="table-head">
@@ -23,8 +24,8 @@ export function SessionTable({ sessions, focusedId, selectedIds, onToggle, onFoc
         ) : (
           sessions.map((session) => (
             <div
-              className={session.id === focusedId ? "session-row focused" : "session-row"}
-              key={session.id}
+              className={getSessionInstanceKey(session) === focusedKey ? "session-row focused" : "session-row"}
+              key={getSessionInstanceKey(session)}
               role="button"
               tabIndex={0}
               onClick={() => onFocus(session)}
