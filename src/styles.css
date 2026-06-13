@@ -222,10 +222,20 @@ button:disabled {
   cursor: pointer;
 }
 
-.group-row:hover,
+.group-row:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
 .group-row.selected {
   border-color: #b6c3d4;
-  background: #edf2f7;
+  background: #e8f0fb;
+  box-shadow: inset 3px 0 0 #2563eb;
+  color: #172033;
+}
+
+.group-row.selected .group-meta {
+  color: #475467;
 }
 
 .group-label {
